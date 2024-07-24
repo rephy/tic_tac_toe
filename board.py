@@ -11,11 +11,12 @@ class Board(PrettyTable):
             ['', '', ''],
             ['', '', '']
         ]
+        self.players = []
         self.scores = [0, 0]
         self.update_board()
 
     def display(self):
-        print(f'Player 1: {self.scores[0]} | Player 2: {self.scores[1]}')
+        print(f'Player 1: {self.scores[0]} | {'Player 2' if type(self.players[1]).__name__ == 'Player' else 'Bot'}: {self.scores[1]}')
 
         print(self)
 

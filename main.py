@@ -1,5 +1,5 @@
 from board import Board
-from players import Player
+from players import Player, Bot
 from time import sleep
 
 markers = ('X', 'O')
@@ -9,7 +9,7 @@ board = Board()
 board.erase()
 
 player1 = Player(board)
-player2 = Player(board)
+player2 = Bot(board)
 
 while True:
     board.display()
