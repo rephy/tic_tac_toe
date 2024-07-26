@@ -51,6 +51,15 @@ class Player:
             return True
         return False
 
+    def tie(self):
+        if not self.check():
+            pos_list = []
+            for row in self.board.pos:
+                pos_list += row
+            if '' not in pos_list:
+                return True
+        return False
+
     def __invalid_move(self):
         print('That\'s not a legal move.')
         sleep(5)
@@ -96,7 +105,7 @@ class Bot(Player):
         if (move is None) or (count == 2):
             move = possible_move
             if move is None:
-                move, = random.sample(['A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3'], 1)[0]
+                move = random.sample(['A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3'], 1)[0]
                 while self.board.pos[abc.index(move[0])][int(move[1]) - 1] != '':
                     move = random.sample(['A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3'], 1)[0]
 
@@ -152,7 +161,7 @@ class Bot(Player):
             possible_moves.append(('diagonal', match_diagonal, diagonal[2]))
 
         if not (diagonals or columns or rows):
-            return None
+            return None, None
 
         counts = [possible_move[2] for possible_move in possible_moves]
         counts_max = max(counts)

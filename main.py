@@ -9,24 +9,44 @@ board = Board()
 board.erase()
 
 player1 = Player(board)
-player2 = Bot(board)
+
+try:
+    players = int(input('One player or two player? (1 or 2) '))
+except TypeError:
+    players = 1
+
+if players == 1:
+    player2 = Bot(board)
+else:
+    player2 = Player(board)
+
+board.erase()
+
+def check(player):
+    if player.check():
+        print('Player 1 wins!')
+        return 'Win'
+
+    if player.tie():
+        print('This game is tied!')
+        return 'Tie'
+
+    return None
 
 while True:
     board.display()
 
     while True:
         player1.move()
-        if player1.check():
-            print('Player 1 wins!')
+        if check(player1):
             break
 
         player2.move()
-        if player2.check():
-            print('Player 2 wins!')
+        if check(player2):
             break
 
     sleep(3)
-    play_again = input('Play again? (leave blank if no)')
-    if play_again.strip() == '':
+    play_again = input('Play again? (leave blank if yes) ')
+    if play_again.strip() != '':
         break
     board.reset()
