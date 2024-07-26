@@ -14,11 +14,16 @@ try:
     players = int(input('One player or two player? (1 or 2) '))
 except TypeError:
     players = 1
+except KeyboardInterrupt:
+    board.erase()
+    quit()
 
 if players == 1:
     player2 = Bot(board)
 else:
     player2 = Player(board)
+
+current_player = 1
 
 board.erase()
 
@@ -33,20 +38,35 @@ def check(player):
 
     return None
 
+def next():
+    try:
+        next.player += 1
+    except AttributeError:
+        next.player = 1
+
+    if next.player > 2:
+        next.player -= 2
+
+    if next.player == 1:
+        return player1
+    else:
+        return player2
+
 while True:
     board.display()
 
     while True:
-        player1.move()
-        if check(player1):
-            break
-
-        player2.move()
-        if check(player2):
+        player = next()
+        player.move()
+        if check(player):
             break
 
     sleep(3)
-    play_again = input('Play again? (leave blank if yes) ')
+    try:
+        play_again = input('Play again? (leave blank if yes) ')
+    except KeyboardInterrupt:
+        board.erase()
+        quit()
     if play_again.strip() != '':
         break
     board.reset()

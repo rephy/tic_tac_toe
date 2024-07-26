@@ -2,6 +2,15 @@ from time import sleep
 from os import system
 import random
 
+def flush_input():
+    try:
+        import msvcrt
+        while msvcrt.kbhit():
+            msvcrt.getch()
+    except ImportError:
+        import sys, termios
+        termios.tcflush(sys.stdin, termios.TCIOFLUSH)
+
 markers = ('X', 'O')
 
 class Player:
@@ -14,7 +23,11 @@ class Player:
         self.marker = markers[self.num - 1]
 
     def move(self):
-        move = input(f'Player {self.num}, where do you want to make your move? Example: A2\n').strip().upper()
+        try:
+            move = input(f'Player {self.num}, where do you want to make your move? Example: A2\n').strip().upper()
+        except KeyboardInterrupt:
+            self.board.erase()
+            quit()
         legal_moves = []
         invalid_move = False
         abc = ['A', 'B', 'C']
