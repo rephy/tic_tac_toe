@@ -91,7 +91,26 @@ class Bot(Player):
     def move(self):
         abc = ['A', 'B', 'C']
 
+        move = self.__defensive_move()
+        possible_move, count = self.__offensive_move()
+        if (move is None) or (count == 2):
+            move = possible_move
+            if move is None:
+                move, = random.sample(['A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3'], 1)[0]
+                while self.board.pos[abc.index(move[0])][int(move[1]) - 1] != '':
+                    move = random.sample(['A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3'], 1)[0]
+
+        self.board.pos[abc.index(move[0])][int(move[1]) - 1] = self.marker
+
+        self.board.update_board()
+        self.board.erase()
+        self.board.display()
+
+    def __defensive_move(self):
+        abc = ['A', 'B', 'C']
+
         rows, columns, diagonals = self.__check_opponent()
+        move = ''
         if rows:
             row = list(rows[0].keys())[0]
             column = list(rows[0][row]).index('') + 1
@@ -108,22 +127,65 @@ class Bot(Player):
             match_diagonal = possible_diagonals[0 if diagonal[0] == -1 else 1]
 
             move = match_diagonal[1][diagonal[1].index('')]
-        else:
-            move = f'{random.sample(abc, 1)[0]}{random.sample([1, 2, 3], 1)[0]}'
 
-        while self.board.pos[abc.index(move[0])][int(move[1]) - 1] != '':
-            move = f'{random.sample(abc, 1)[0]}{random.sample([1, 2, 3], 1)[0]}'
+        return (move if move != '' else None)
 
-        self.board.pos[abc.index(move[0])][int(move[1]) - 1] = self.marker
+    def __offensive_move(self):
+        abc = ['A', 'B', 'C']
 
-        self.board.update_board()
-        self.board.erase()
-        self.board.display()
+        rows, columns, diagonals = self.__check_free_places()
+        possible_moves = []
+        move = ''
+        for a_row in rows:
+            row = list(a_row.keys())[0]
+
+            possible_moves.append(('row', row, a_row['count']))
+        for a_column in columns:
+            column = list(a_column)[0]
+
+            possible_moves.append(('column', column, a_column[2]))
+        for a_diagonal in diagonals:
+            possible_diagonals = [(-1, ['A3', 'B2', 'C1']), (1, ['A1', 'B2', 'C3'])]
+            diagonal = list(a_diagonal)
+            match_diagonal = possible_diagonals[0 if diagonal[0] == -1 else 1]
+
+            possible_moves.append(('diagonal', match_diagonal, diagonal[2]))
+
+        if not (diagonals or columns or rows):
+            return None
+
+        counts = [possible_move[2] for possible_move in possible_moves]
+        counts_max = max(counts)
+
+        possible_moves = [possible_move for possible_move in possible_moves if possible_move[2] == counts_max]
+        place = random.sample(possible_moves, 1)[0]
+
+        if place[0] == 'row':
+            move = f'{place[1]}{random.sample([1, 2, 3], 1)[0]}'
+            while self.board.pos[abc.index(move[0])][int(move[1]) - 1] != '':
+                move = f'{place[1]}{random.sample([1, 2, 3], 1)[0]}'
+        elif place[0] == 'column':
+            move = f'{random.sample(['A', 'B', 'C'], 1)[0]}{place[1]}'
+            while self.board.pos[abc.index(move[0])][int(move[1]) - 1] != '':
+                move = f'{random.sample(['A', 'B', 'C'], 1)[0]}{place[1]}'
+        elif place[0] == 'diagonal':
+            move = random.sample(place[1][0], 1)
+            while self.board.pos[abc.index(move[0])][int(move[1]) - 1] != '':
+                move = random.sample(place[1], 1)[0]
+
+        return move, counts_max
 
     def __check_opponent(self):
         rows = self.__check_opponent_rows()
         columns = self.__check_opponent_columns()
         diagonals = self.__check_opponent_diagonals()
+
+        return rows, columns, diagonals
+
+    def __check_free_places(self):
+        rows = self.__check_free_rows()
+        columns = self.__check_free_columns()
+        diagonals = self.__check_free_diagonals()
 
         return rows, columns, diagonals
 
@@ -157,5 +219,50 @@ class Bot(Player):
 
             if len([marker for marker in diagonal if marker == markers[0]]) == 2 and [marker for marker in diagonal if marker != markers[0]][0] == '':
                 diagonals.append((diagonal_num, diagonal))
+
+        return diagonals
+
+    def __check_free_rows(self):
+        rows = []
+        abc = ['A', 'B', 'C']
+        for row in self.board.pos:
+            if (row[0] != markers[0]) and (row[1] != markers[0]) and (row[2] != markers[0]):
+                count = 0
+                for value in row:
+                    if value != '':
+                        count += 1
+
+                rows.append({abc[self.board.pos.index(row)]: row, 'count': count})
+        return rows
+
+    def __check_free_columns(self):
+        columns = []
+        for column_num in range(3):
+            column = []
+            for row in self.board.pos:
+                column.append(row[column_num])
+            if (column[0] != markers[0]) and (column[1] != markers[0]) and (column[2] != markers[0]):
+                count = 0
+                for value in column:
+                    if value != '':
+                        count += 1
+                columns.append((column_num + 1, column, count))
+        return columns
+
+    def __check_free_diagonals(self):
+        diagonals = []
+        for diagonal_num in range(-1, 2, 2):
+            pos = self.board.pos
+            if diagonal_num == -1:
+                diagonal = [pos[0][2], pos[1][1], pos[2][0]]
+            else:
+                diagonal = [pos[0][0], pos[1][1], pos[2][2]]
+
+            if (diagonal[0] != markers[0]) and (diagonal[1] != markers[0]) and (diagonal[2] != markers[0]):
+                count = 0
+                for value in diagonal:
+                    if value != '':
+                        count += 1
+                diagonals.append((diagonal_num, diagonal, count))
 
         return diagonals
